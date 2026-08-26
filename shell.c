@@ -1,8 +1,8 @@
 #include "shell.h"
 
 /**
- * execute_command - Forks a child process and executes the command with args
- * @args: Array of argument strings (args[0] is executable path)
+ * execute_command - Forks a child process and executes a command with args
+ * @args: Null-terminated array of command strings
  * @prog_name: Name of the shell program for error reporting
  *
  * Return: void
@@ -34,7 +34,7 @@ void execute_command(char **args, char *prog_name)
 }
 
 /**
- * main - Entry point for the simple shell interpreter
+ * main - Entry point for simple shell interpreter
  * @ac: Argument count (unused)
  * @av: Argument vector
  *
