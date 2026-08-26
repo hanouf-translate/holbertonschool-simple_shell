@@ -49,6 +49,7 @@ int main(int ac, char **av)
 	char *line = NULL;
 	size_t len = 0;
 	ssize_t read_bytes;
+	char *cmd;
 
 	(void)ac;
 
@@ -66,11 +67,9 @@ int main(int ac, char **av)
 			exit(0);
 		}
 
-		if (line[read_bytes - 1] == '\n')
-			line[read_bytes - 1] = '\0';
-
-		if (line[0] != '\0')
-			execute_command(line, av[0]);
+		cmd = strtok(line, " \t\n\r");
+		if (cmd != NULL)
+			execute_command(cmd, av[0]);
 	}
 
 	free(line);
