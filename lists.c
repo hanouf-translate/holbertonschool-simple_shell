@@ -3,6 +3,8 @@
 /**
  * free_vector - Frees a NULL-terminated array of strings
  * @vector: Double pointer to the array of strings
+ *
+ * Return: void
  */
 void free_vector(char **vector)
 {
