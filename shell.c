@@ -1,20 +1,16 @@
 #include "shell.h"
 
 /**
- * execute_command - Forks a child process and executes the command
- * @cmd: The executable path/command to run
+ * execute_command - Forks a child process and executes the command with args
+ * @args: Array of argument strings (args[0] is executable path)
  * @prog_name: Name of the shell program for error reporting
  *
  * Return: void
  */
-void execute_command(char *cmd, char *prog_name)
+void execute_command(char **args, char *prog_name)
 {
 	pid_t pid;
 	int status;
-	char *args[2];
-
-	args[0] = cmd;
-	args[1] = NULL;
 
 	pid = fork();
 	if (pid == -1)
@@ -25,7 +21,7 @@ void execute_command(char *cmd, char *prog_name)
 
 	if (pid == 0)
 	{
-		if (execve(cmd, args, environ) == -1)
+		if (execve(args[0], args, environ) == -1)
 		{
 			perror(prog_name);
 			exit(1);
@@ -49,7 +45,9 @@ int main(int ac, char **av)
 	char *line = NULL;
 	size_t len = 0;
 	ssize_t read_bytes;
-	char *cmd;
+	char *args[MAX_TOKENS];
+	char *token;
+	int i;
 
 	(void)ac;
 
@@ -67,9 +65,17 @@ int main(int ac, char **av)
 			exit(0);
 		}
 
-		cmd = strtok(line, " \t\n\r");
-		if (cmd != NULL)
-			execute_command(cmd, av[0]);
+		i = 0;
+		token = strtok(line, " \t\n\r");
+		while (token != NULL && i < MAX_TOKENS - 1)
+		{
+			args[i++] = token;
+			token = strtok(NULL, " \t\n\r");
+		}
+		args[i] = NULL;
+
+		if (args[0] != NULL)
+			execute_command(args, av[0]);
 	}
 
 	free(line);
