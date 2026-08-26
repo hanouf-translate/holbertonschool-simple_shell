@@ -1,0 +1,58 @@
+.TH SIMPLE_SHELL 1 "August 2026" "Version 1.0" "Holberton School Manual"
+.SH NAME
+hsh \- Simple Unix command line interpreter
+.SH SYNOPSIS
+.B ./hsh
+.SH DESCRIPTION
+.B hsh
+is a UNIX command line interpreter that reads commands from standard input or from a file stream and executes them. It operates in both interactive and non-interactive modes.
+
+.SS Interactive Mode
+When executed without piped input, 
+.B hsh
+displays a prompt 
+.B (#cisfun$ )
+and waits for user input. Upon receiving a command, it parses the input, creates a child process using 
+.BR fork (2), 
+and executes the target executable with 
+.BR execve (2).
+
+.SS Non-Interactive Mode
+When commands are piped into 
+.B hsh
+via standard input, no prompt is displayed. The shell reads sequentially until it encounters an 
+.B EOF
+(End-Of-File) condition or the 
+.B exit 
+command.
+
+.SH ENVIRONMENT
+.B hsh
+uses the standard process environment array 
+.I environ
+passed via system execution to locate binaries and execute programs.
+
+.SH EXIT STATUS
+Returns 0 upon successful termination or when receiving an explicit EOF condition (Ctrl+D). If a command is not found or fails to execute, the program continues running and returns the status of the child process.
+
+.SH ERRORS
+If a command cannot be executed, 
+.B hsh 
+prints an error message to standard error stream formatted as follows:
+.RS
+.B ./hsh: 1: command_name: not found
+.RE
+
+.SH BUGS
+No known bugs at present.
+
+.SH SEE ALSO
+.BR sh (1),
+.BR access (2),
+.BR execve (2),
+.BR fork (2),
+.BR wait (2),
+.BR getline (3)
+
+.SH AUTHORS
+Spencer Cheng and Julien Barbier
