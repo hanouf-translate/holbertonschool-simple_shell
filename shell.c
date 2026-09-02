@@ -76,17 +76,30 @@ static int tokenize_line(char *line, char **args)
  * handle_builtin - Handles shell built-in commands
  * @args: Command arguments
  * @line: Input buffer
- * @status: Status of the previous command
+ * @status: Status of previous command
  *
- * Return: void
+ * Return: 1 if command is built-in, otherwise 0
  */
-static void handle_builtin(char **args, char *line, int status)
+static int handle_builtin(char **args, char *line, int *status)
 {
+	int i;
+
 	if (strcmp(args[0], "exit") == 0)
 	{
 		free(line);
-		exit(status);
+		exit(*status);
 	}
+
+	if (strcmp(args[0], "env") == 0)
+	{
+		for (i = 0; environ[i] != NULL; i++)
+			printf("%s\n", environ[i]);
+
+		*status = 0;
+		return (1);
+	}
+
+	return (0);
 }
 
 /**
@@ -123,8 +136,8 @@ int main(int ac, char **av)
 		count++;
 		if (tokenize_line(line, args) > 0)
 		{
-			handle_builtin(args, line, status);
-			status = execute_command(args, av[0], count);
+			if (!handle_builtin(args, line, &status))
+				status = execute_command(args, av[0], count);
 		}
 	}
 }
