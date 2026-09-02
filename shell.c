@@ -66,6 +66,22 @@ static int tokenize_line(char *line, char **args)
 }
 
 /**
+ * handle_builtin - Handles shell built-in commands
+ * @args: Command arguments
+ * @line: Input buffer to free before exiting
+ *
+ * Return: void
+ */
+static void handle_builtin(char **args, char *line)
+{
+	if (strcmp(args[0], "exit") == 0)
+	{
+		free(line);
+		exit(0);
+	}
+}
+
+/**
  * main - Entry point for simple shell interpreter
  * @ac: Argument count
  * @av: Argument vector
@@ -98,7 +114,10 @@ int main(int ac, char **av)
 
 		count++;
 		if (tokenize_line(line, args) > 0)
+		{
+			handle_builtin(args, line);
 			execute_command(args, av[0], count);
+		}
 	}
 
 	return (0);
