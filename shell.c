@@ -1,44 +1,76 @@
 #include "shell.h"
 
 /**
- * execute_command - Forks a child process and executes a command with args
- * @args: Null-terminated array of command strings
- * @prog_name: Name of the shell program for error reporting
+ * execute_command - Forks and executes a command
+ * @args: Null-terminated array of command arguments
+ * @prog_name: Name of the shell program
+ * @count: Input line number
  *
  * Return: void
  */
-void execute_command(char **args, char *prog_name)
+void execute_command(char **args, char *prog_name, int count)
 {
+	char *command_path;
 	pid_t pid;
 	int status;
+
+	command_path = find_command(args[0]);
+	if (command_path == NULL)
+	{
+		fprintf(stderr, "%s: %d: %s: not found\n",
+			prog_name, count, args[0]);
+		return;
+	}
 
 	pid = fork();
 	if (pid == -1)
 	{
 		perror("Error");
+		free(command_path);
 		return;
 	}
 
 	if (pid == 0)
 	{
-		if (execve(args[0], args, environ) == -1)
-		{
-			perror(prog_name);
-			exit(1);
-		}
+		execve(command_path, args, environ);
+		perror(prog_name);
+		free(command_path);
+		_exit(126);
 	}
-	else
+
+	wait(&status);
+	free(command_path);
+}
+
+/**
+ * tokenize_line - Splits an input line into arguments
+ * @line: Input line
+ * @args: Array to store command arguments
+ *
+ * Return: Number of arguments
+ */
+static int tokenize_line(char *line, char **args)
+{
+	char *token;
+	int i = 0;
+
+	token = strtok(line, " \t\n\r");
+	while (token != NULL && i < MAX_TOKENS - 1)
 	{
-		wait(&status);
+		args[i++] = token;
+		token = strtok(NULL, " \t\n\r");
 	}
+
+	args[i] = NULL;
+	return (i);
 }
 
 /**
  * main - Entry point for simple shell interpreter
- * @ac: Argument count (unused)
+ * @ac: Argument count
  * @av: Argument vector
  *
- * Return: Always 0 on success
+ * Return: Always 0
  */
 int main(int ac, char **av)
 {
@@ -46,8 +78,7 @@ int main(int ac, char **av)
 	size_t len = 0;
 	ssize_t read_bytes;
 	char *args[MAX_TOKENS];
-	char *token;
-	int i;
+	int count = 0;
 
 	(void)ac;
 
@@ -65,19 +96,10 @@ int main(int ac, char **av)
 			exit(0);
 		}
 
-		i = 0;
-		token = strtok(line, " \t\n\r");
-		while (token != NULL && i < MAX_TOKENS - 1)
-		{
-			args[i++] = token;
-			token = strtok(NULL, " \t\n\r");
-		}
-		args[i] = NULL;
-
-		if (args[0] != NULL)
-			execute_command(args, av[0]);
+		count++;
+		if (tokenize_line(line, args) > 0)
+			execute_command(args, av[0], count);
 	}
 
-	free(line);
 	return (0);
 }

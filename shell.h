@@ -15,6 +15,7 @@ extern char **environ;
 
 void free_vector(char **vector);
 char *_strdup(const char *str);
-void execute_command(char **args, char *prog_name);
+char *find_command(char *command);
+void execute_command(char **args, char *prog_name, int count);
 
 #endif /* SHELL_H */
