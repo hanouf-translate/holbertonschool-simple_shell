@@ -6,9 +6,9 @@
  * @prog_name: Name of the shell program
  * @count: Input line number
  *
- * Return: void
+ * Return: Exit status of the command
  */
-void execute_command(char **args, char *prog_name, int count)
+int execute_command(char **args, char *prog_name, int count)
 {
 	char *command_path;
 	pid_t pid;
@@ -19,7 +19,7 @@ void execute_command(char **args, char *prog_name, int count)
 	{
 		fprintf(stderr, "%s: %d: %s: not found\n",
 			prog_name, count, args[0]);
-		return;
+		return (127);
 	}
 
 	pid = fork();
@@ -27,7 +27,7 @@ void execute_command(char **args, char *prog_name, int count)
 	{
 		perror("Error");
 		free(command_path);
-		return;
+		return (1);
 	}
 
 	if (pid == 0)
@@ -38,8 +38,15 @@ void execute_command(char **args, char *prog_name, int count)
 		_exit(126);
 	}
 
-	wait(&status);
+	waitpid(pid, &status, 0);
 	free(command_path);
+
+	if (WIFEXITED(status))
+		return (WEXITSTATUS(status));
+	if (WIFSIGNALED(status))
+		return (128 + WTERMSIG(status));
+
+	return (1);
 }
 
 /**
@@ -68,16 +75,17 @@ static int tokenize_line(char *line, char **args)
 /**
  * handle_builtin - Handles shell built-in commands
  * @args: Command arguments
- * @line: Input buffer to free before exiting
+ * @line: Input buffer
+ * @status: Status of the previous command
  *
  * Return: void
  */
-static void handle_builtin(char **args, char *line)
+static void handle_builtin(char **args, char *line, int status)
 {
 	if (strcmp(args[0], "exit") == 0)
 	{
 		free(line);
-		exit(0);
+		exit(status);
 	}
 }
 
@@ -86,7 +94,7 @@ static void handle_builtin(char **args, char *line)
  * @ac: Argument count
  * @av: Argument vector
  *
- * Return: Always 0
+ * Return: Status of the last command
  */
 int main(int ac, char **av)
 {
@@ -94,7 +102,7 @@ int main(int ac, char **av)
 	size_t len = 0;
 	ssize_t read_bytes;
 	char *args[MAX_TOKENS];
-	int count = 0;
+	int count = 0, status = 0;
 
 	(void)ac;
 
@@ -109,16 +117,14 @@ int main(int ac, char **av)
 			if (isatty(STDIN_FILENO))
 				write(STDOUT_FILENO, "\n", 1);
 			free(line);
-			exit(0);
+			return (status);
 		}
 
 		count++;
 		if (tokenize_line(line, args) > 0)
 		{
-			handle_builtin(args, line);
-			execute_command(args, av[0], count);
+			handle_builtin(args, line, status);
+			status = execute_command(args, av[0], count);
 		}
 	}
-
-	return (0);
 }
